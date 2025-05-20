@@ -1,0 +1,21 @@
+.postContainer {
+    margin-top: 10px;
+}
+
+.navbarLink {
+    color: white;
+    text-decoration: none;
+}
+
+.myContainer {
+    padding: 10px;
+    background-color: rgb(250, 244, 244);
+}
+.avatar{
+    color: white;
+    text-decoration: none;
+}
+.link{
+    color: white;
+    text-decoration: none;
+}
