@@ -1,70 +1,125 @@
-# Getting Started with Create React App
+# QuestApp Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React single-page application for **QuestApp** — a social feed where users register, log in, create posts, like posts, and leave comments.
 
-## Available Scripts
+| Document | Language |
+|----------|----------|
+| [README.md](./README.md) | English |
+| [README_TR.md](./README_TR.md) | Türkçe |
+| [README_DE.md](./README_DE.md) | Deutsch |
+| [architecture-uml.md](./architecture-uml.md) | Architecture & UML |
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- User registration and login (JWT stored in `localStorage`)
+- Home feed with all posts
+- Create posts (authenticated)
+- Like / unlike posts
+- Expandable comments and add-comment form
+- User profile with post, comment, and like counts
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Tech stack
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+| Technology | Version / notes |
+|------------|-----------------|
+| React | 19 |
+| Create React App | `react-scripts` 5 |
+| React Router | 7 |
+| Material UI | 7 (`@mui/material`, `@mui/icons-material`) |
+| HTTP | Native `fetch` (relative URLs) |
+| Backend proxy | `http://localhost:8080` |
 
-### `npm test`
+## Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 18+ and npm
+- QuestApp backend running on **port 8080** (Spring Boot API)
 
-### `npm run build`
+## Getting started
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Open [http://localhost:3000](http://localhost:3000). API calls are proxied to `http://localhost:8080` via the `proxy` field in `package.json`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Other scripts
 
-### `npm run eject`
+| Command | Description |
+|---------|-------------|
+| `npm start` | Development server |
+| `npm test` | Jest / Testing Library |
+| `npm run build` | Production build → `build/` |
+| `npm run eject` | Eject CRA config (irreversible) |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Project structure
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+src/
+├── App.js                 # Router, auth gate for /auth
+├── index.js               # Entry point
+└── components/
+    ├── Auth/Auth.js       # Register & login
+    ├── Home/Home.js       # Feed + PostForm
+    ├── Navbar/Navbar.js   # Navigation & logout
+    ├── Post/Post.js       # Post card, likes, comments
+    ├── Post/PostForm.js   # Create post
+    ├── Comment/Comment.js
+    ├── Comment/CommentForm.js
+    └── User/User.js       # Profile & activity counts
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Routes
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| Path | Component | Description |
+|------|-----------|-------------|
+| `/` | `Home` | Post feed |
+| `/users/:userId` | `User` | User profile |
+| `/posts` | `Post` | Standalone post route (expects props from feed usage) |
+| `/auth` | `Auth` | Login / register (redirects to `/` if already logged in) |
 
-## Learn More
+## Authentication
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. `POST /auth/register` or `POST /auth/login` with `{ userName, password }`
+2. Response: `{ message: "<token>", userId: <id> }`
+3. Stored in `localStorage`:
+   - `tokenKey` — JWT / token
+   - `currentUser` — user id
+   - `userName` — username
+4. Authenticated requests send header: `Authorization: <tokenKey>` (raw token, no `Bearer` prefix)
+5. Logout clears those keys and reloads the page
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Guests can browse the feed. Creating posts, liking, and commenting require login.
 
-### Code Splitting
+## API endpoints used
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Base URL in development: relative paths → CRA proxy → `http://localhost:8080`.
 
-### Analyzing the Bundle Size
+| Method | Endpoint | Used by |
+|--------|----------|---------|
+| `POST` | `/auth/register` | Auth |
+| `POST` | `/auth/login` | Auth |
+| `GET` | `/posts` | Home |
+| `POST` | `/posts` | PostForm |
+| `GET` | `/posts?userId=` | User |
+| `GET` | `/comments?postId=` | Post |
+| `GET` | `/comments?userId=` | User |
+| `POST` | `/comments` | CommentForm |
+| `POST` | `/likes` | Post |
+| `DELETE` | `/likes/{likeId}` | Post |
+| `GET` | `/likes?userId=` | User |
+| `GET` | `/users/{userId}` | User |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Configuration
 
-### Making a Progressive Web App
+- No `.env` / `REACT_APP_*` variables are required for local development.
+- Change the backend URL by editing `"proxy"` in `package.json`.
+- Production builds need same-origin reverse proxy or an explicit API base URL.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Architecture
 
-### Advanced Configuration
+See [architecture-uml.md](./architecture-uml.md) for component hierarchy, sequence flows, and UML diagrams.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## License
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Private project (`"private": true` in `package.json`).
